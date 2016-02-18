@@ -97,7 +97,7 @@ public class Percolation {
 			throw new IndexOutOfBoundsException("Index out of bound!");
 
 		int root = unionFind.find(idx);
-		return isOpen(state[root]) && isConnectedToTop(state[root]);
+		return isOpen(state[idx]) && isConnectedToTop(state[root]);
 	}
 
 	// does the system percolate?
