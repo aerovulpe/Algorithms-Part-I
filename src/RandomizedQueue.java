@@ -68,7 +68,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
             @Override
             public Item next() {
-                if (i == size) throw new NoSuchElementException("RandomizedQueue is empty!");
+                if (i == size) throw new NoSuchElementException("End of RandomizedQueue!");
 
                 int randIdx = i + StdRandom.uniform(size - i);
                 Item item = cachedArray[randIdx];

@@ -1,14 +1,13 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
-    private static final byte IS_OPEN = 1 << 0; // 001
+    private static final byte IS_OPEN = 1; // 001
     private static final byte IS_CONNECTED_TO_TOP = 1 << 1; // 010
     private static final byte IS_CONNECTED_TO_BOTTOM = 1 << 2; // 100
 
     private final WeightedQuickUnionUF unionFind;
     private final byte[] state;
-    private final int size;
-    private final int sizeSquared;
+    private final int rootSize;
     private boolean percolates;
 
     // create N-by-N grid, with all sites blocked
@@ -16,10 +15,10 @@ public class Percolation {
         if (n < 1)
             throw new IllegalArgumentException("Invalid size!");
 
-        sizeSquared = n * n;
-        unionFind = new WeightedQuickUnionUF(sizeSquared);
-        state = new byte[sizeSquared];
-        size = n;
+        int size = n * n;
+        unionFind = new WeightedQuickUnionUF(size);
+        state = new byte[size];
+        rootSize = n;
     }
 
     // open site (row i, column j) if it is not open already
@@ -31,21 +30,18 @@ public class Percolation {
         if (isOpen(state[idx]))
             return;
 
-        int iPlus1 = i + 1;
-        int iMinus1 = i - 1;
-        int jPlus1 = j + 1;
-        int jMinus1 = j - 1;
         boolean connectedToTop = i == 1;
-        boolean connectedToBottom = i == size;
+        boolean connectedToBottom = i == rootSize;
 
-        int currIdx = computeIdx(i, jMinus1);
-        ConnectToNeighbour connectToNeighbour = new ConnectToNeighbour(idx, connectedToTop, connectedToBottom, currIdx).invoke();
-        currIdx = computeIdx(i, jPlus1);
-        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop, connectToNeighbour.connectedToBottom, currIdx).invoke();
-        currIdx = computeIdx(iMinus1, j);
-        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop, connectToNeighbour.connectedToBottom, currIdx).invoke();
-        currIdx = computeIdx(iPlus1, j);
-        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop, connectToNeighbour.connectedToBottom, currIdx).invoke();
+        ConnectToNeighbour connectToNeighbour = new ConnectToNeighbour(idx, connectedToTop,
+                connectedToBottom, computeIdx(i, j - 1)).invoke();
+        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop,
+                connectToNeighbour.connectedToBottom, computeIdx(i, j + 1)).invoke();
+        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop,
+                connectToNeighbour.connectedToBottom, computeIdx(i - 1, j)).invoke();
+        connectToNeighbour = new ConnectToNeighbour(idx, connectToNeighbour.connectedToTop,
+                connectToNeighbour.connectedToBottom, computeIdx(i + 1, j)).invoke();
+
         connectedToTop = connectToNeighbour.connectedToTop;
         connectedToBottom = connectToNeighbour.connectedToBottom;
 
@@ -86,7 +82,7 @@ public class Percolation {
     }
 
     private int computeIdx(int i, int j) {
-        return (i > 0 && i <= size && j > 0 && j <= size) ? (i - 1) * size + j - 1 : -1;
+        return (i > 0 && i <= rootSize && j > 0 && j <= rootSize) ? (i - 1) * rootSize + j - 1 : -1;
     }
 
     private static boolean isOpen(byte flag) {
@@ -107,14 +103,14 @@ public class Percolation {
         private boolean connectedToBottom;
         private int currIdx;
 
-        public ConnectToNeighbour(int idx, boolean connectedToTop, boolean connectedToBottom, int currIdx) {
+        private ConnectToNeighbour(int idx, boolean connectedToTop, boolean connectedToBottom, int currIdx) {
             this.idx = idx;
             this.connectedToTop = connectedToTop;
             this.connectedToBottom = connectedToBottom;
             this.currIdx = currIdx;
         }
 
-        public ConnectToNeighbour invoke() {
+        private ConnectToNeighbour invoke() {
             if (currIdx != -1 && isOpen(state[currIdx])) {
                 int root = unionFind.find(currIdx);
                 connectedToTop |= Percolation.isConnectedToTop(state[root]);
